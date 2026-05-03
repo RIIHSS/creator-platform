@@ -1,41 +1,21 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
+  const { user, logout, loading } = useAuth();
 
-  // ✅ Initialize user directly from localStorage (FIX)
-  const [user] = useState(() => {
-    try {
-      const userData = localStorage.getItem('user');
-      return userData ? JSON.parse(userData) : null;
-    } catch (error) {
-      console.error('Error parsing user:', error);
-      return null;
-    }
-  });
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    // Redirect if not logged in
-    if (!token || !user) {
-      navigate('/login');
-    }
-  }, [navigate, user]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
-  if (!user) {
+  // Loading state (prevents flicker)
+  if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem' }}>
         Loading...
       </div>
     );
+  }
+
+  // Not logged in → redirect
+  if (!user) {
+    return <Navigate to="/login" />;
   }
 
   return (
@@ -46,7 +26,7 @@ const Dashboard = () => {
           <p>Welcome back, {user.name}!</p>
         </div>
 
-        <button onClick={handleLogout} style={logoutButtonStyle}>
+        <button onClick={logout} style={logoutButtonStyle}>
           Logout
         </button>
       </div>
