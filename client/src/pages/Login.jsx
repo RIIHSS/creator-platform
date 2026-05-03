@@ -1,23 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api'; // ✅ added API utility
 
 const Login = () => {
-  const { login } = useAuth(); // ✅ use context
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Form state
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
 
-  // UI state
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  // Handle input
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -33,12 +31,9 @@ const Login = () => {
       }));
     }
 
-    if (apiError) {
-      setApiError('');
-    }
+    if (apiError) setApiError('');
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
@@ -56,10 +51,8 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setApiError('');
 
     if (!validateForm()) return;
@@ -67,32 +60,27 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email.trim().toLowerCase(),
-          password: formData.password
-        })
+      // ✅ MERGED PART: using api utility instead of fetch
+      const response = await api.post('/api/auth/login', {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
-        // ✅ Use context instead of localStorage
-        login(data.user, data.token);
+      // success
+      login(data.user, data.token);
 
-        // Clear form
-        setFormData({ email: '', password: '' });
-
-        // Redirect
-        navigate('/dashboard');
-      } else {
-        setApiError(data.message || 'Login failed');
-      }
+      setFormData({ email: '', password: '' });
+      navigate('/dashboard');
     } catch (error) {
       console.error(error);
-      setApiError('Unable to connect to server');
+
+      // safer error handling for axios-style responses
+      setApiError(
+        error?.response?.data?.message ||
+        'Unable to connect to server'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +97,6 @@ const Login = () => {
         )}
 
         <form onSubmit={handleSubmit} style={formStyle}>
-          {/* Email */}
           <div style={fieldStyle}>
             <label style={labelStyle}>Email</label>
             <input
@@ -126,7 +113,6 @@ const Login = () => {
             )}
           </div>
 
-          {/* Password */}
           <div style={fieldStyle}>
             <label style={labelStyle}>Password</label>
             <input
@@ -182,31 +168,11 @@ const formContainerStyle = {
   boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
 };
 
-const titleStyle = {
-  textAlign: 'center',
-  marginBottom: '0.5rem',
-};
-
-const subtitleStyle = {
-  textAlign: 'center',
-  marginBottom: '2rem',
-  color: '#666',
-};
-
-const formStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1.2rem',
-};
-
-const fieldStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-};
-
-const labelStyle = {
-  marginBottom: '0.3rem',
-};
+const titleStyle = { textAlign: 'center', marginBottom: '0.5rem' };
+const subtitleStyle = { textAlign: 'center', marginBottom: '2rem', color: '#666' };
+const formStyle = { display: 'flex', flexDirection: 'column', gap: '1.2rem' };
+const fieldStyle = { display: 'flex', flexDirection: 'column' };
+const labelStyle = { marginBottom: '0.3rem' };
 
 const inputStyle = {
   padding: '0.7rem',

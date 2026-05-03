@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import CreatePost from './pages/CreatePost'; // ✅ ADDED
 
 function App() {
   return (
@@ -47,6 +48,16 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* ✅ NEW: Protected Create Post Route */}
+              <Route
+                path="/create"
+                element={
+                  <ProtectedRoute>
+                    <CreatePost />
                   </ProtectedRoute>
                 }
               />
