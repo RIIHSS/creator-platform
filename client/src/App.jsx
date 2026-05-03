@@ -1,7 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import PublicRoute from './components/common/PublicRoute';
+
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -12,24 +16,46 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <div style={appStyle}>
-          {/* Header appears on all pages */}
           <Header />
 
-          {/* Main content area */}
           <main style={mainStyle}>
             <Routes>
-              {/* Define your routes here */}
+              {/* Public */}
               <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              
-              {/* 404 Page - catches all unmatched routes */}
+
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
+                }
+              />
+
+              {/* Protected */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* 404 */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
 
-          {/* Footer appears on all pages */}
           <Footer />
         </div>
       </AuthProvider>
@@ -37,7 +63,7 @@ function App() {
   );
 }
 
-// Simple 404 component
+// 404 Page
 const NotFound = () => {
   return (
     <div style={{ textAlign: 'center', padding: '4rem' }}>
