@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
+  const { login } = useAuth(); // ✅ use context
+  const navigate = useNavigate();
+
   // Form state
   const [formData, setFormData] = useState({
     email: '',
@@ -12,8 +16,6 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-
-  const navigate = useNavigate();
 
   // Handle input
   const handleChange = (e) => {
@@ -77,9 +79,8 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Store token + user
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // ✅ Use context instead of localStorage
+        login(data.user, data.token);
 
         // Clear form
         setFormData({ email: '', password: '' });
@@ -162,7 +163,7 @@ const Login = () => {
   );
 };
 
-// Styles
+// Styles (unchanged)
 const containerStyle = {
   minHeight: '80vh',
   display: 'flex',
