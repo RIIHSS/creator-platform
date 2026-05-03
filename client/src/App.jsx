@@ -10,7 +10,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import CreatePost from './pages/CreatePost'; // ✅ ADDED
+import CreatePost from './pages/CreatePost';
+import EditPost from './pages/EditPost'; // ✅ ADDED
 
 function App() {
   return (
@@ -21,7 +22,8 @@ function App() {
 
           <main style={mainStyle}>
             <Routes>
-              {/* Public */}
+
+              {/* Public Routes */}
               <Route path="/" element={<Home />} />
 
               <Route
@@ -42,7 +44,7 @@ function App() {
                 }
               />
 
-              {/* Protected */}
+              {/* Protected Routes */}
               <Route
                 path="/dashboard"
                 element={
@@ -52,12 +54,21 @@ function App() {
                 }
               />
 
-              {/* ✅ NEW: Protected Create Post Route */}
               <Route
                 path="/create"
                 element={
                   <ProtectedRoute>
                     <CreatePost />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* ✅ NEW: Edit Post Route */}
+              <Route
+                path="/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditPost />
                   </ProtectedRoute>
                 }
               />
@@ -74,7 +85,8 @@ function App() {
   );
 }
 
-// 404 Page
+/* ================= 404 PAGE ================= */
+
 const NotFound = () => {
   return (
     <div style={{ textAlign: 'center', padding: '4rem' }}>
@@ -83,6 +95,8 @@ const NotFound = () => {
     </div>
   );
 };
+
+/* ================= STYLES ================= */
 
 const appStyle = {
   display: 'flex',

@@ -39,6 +39,16 @@ const Dashboard = () => {
     setCurrentPage(newPage);
   };
 
+  const handleDelete = async (postId) => {
+    try {
+      await api.delete(`/api/posts/${postId}`);
+      setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId));
+    } catch (err) {
+      setError('Failed to delete post');
+      console.error(err);
+    }
+  };
+
   // Auth loading
   if (loading) {
     return <div style={loadingStyle}>Loading...</div>;
@@ -58,7 +68,7 @@ const Dashboard = () => {
           <h1>Your Posts</h1>
           <p>Welcome back, {user.name}!</p>
         </div>
-a
+
         <div style={{ display: 'flex', gap: '1rem' }}>
           <Link to="/create">
             <button style={createButtonStyle}>
@@ -105,6 +115,23 @@ a
                       {new Date(post.createdAt).toLocaleDateString()}
                     </span>
                   </div>
+
+                  {/* ✅ YOUR SNIPPET ADDED HERE (UNCHANGED) */}
+                  <div style={actionsStyle}>
+                    <Link to={`/edit/${post._id}`}>
+                      <button style={editButtonStyle}>
+                        Edit
+                      </button>
+                    </Link>
+                    
+                    <button 
+                      onClick={() => handleDelete(post._id)}
+                      style={deleteButtonStyle}
+                    >
+                      Delete
+                    </button>
+                  </div>
+
                 </div>
               ))}
 
@@ -138,6 +165,8 @@ a
     </div>
   );
 };
+
+export default Dashboard;
 
 /* ================= STYLES ================= */
 
@@ -197,6 +226,31 @@ const metaStyle = {
   color: '#777',
 };
 
+/* (your snippet styles assumed already exist) */
+const actionsStyle = {
+  display: 'flex',
+  gap: '0.5rem',
+  marginTop: '1rem',
+};
+
+const editButtonStyle = {
+  padding: '0.5rem 1rem',
+  backgroundColor: '#007bff',
+  color: 'white',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
+};
+
+const deleteButtonStyle = {
+  padding: '0.5rem 1rem',
+  backgroundColor: '#dc3545',
+  color: 'white',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
+};
+
 const paginationStyle = {
   display: 'flex',
   justifyContent: 'space-between',
@@ -233,5 +287,3 @@ const loadingStyle = {
   textAlign: 'center',
   padding: '2rem',
 };
-
-export default Dashboard;
