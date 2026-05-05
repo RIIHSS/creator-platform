@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { Toaster } from 'react-hot-toast'; // ✅ Added import
 
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -11,18 +12,20 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import CreatePost from './pages/CreatePost';
-import EditPost from './pages/EditPost'; // ✅ ADDED
+import EditPost from './pages/EditPost'; 
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        {/* ✅ Global Toaster added here */}
+        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        
         <div style={appStyle}>
           <Header />
 
           <main style={mainStyle}>
             <Routes>
-
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
 
@@ -63,7 +66,7 @@ function App() {
                 }
               />
 
-              {/* ✅ NEW: Edit Post Route */}
+              {/* Edit Post Route */}
               <Route
                 path="/edit/:id"
                 element={

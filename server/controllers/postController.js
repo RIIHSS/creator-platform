@@ -24,6 +24,20 @@ export const createPost = async (req, res) => {
       author: req.user._id // From protect middleware
     });
 
+    // ==========================================
+    // 🔌 SOCKET.IO EMIT (Merged from Snippet)
+    // ==========================================
+    if (req.io) {
+      req.io.emit('newPost', {
+        message: `New post created by ${req.user.name}`,
+        post: {
+          _id: post._id,
+          title: post.title,
+          createdBy: req.user.name // Assumes protect middleware attaches user name
+        }
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: 'Post created successfully',
@@ -45,24 +59,17 @@ export const createPost = async (req, res) => {
 // @access  Private
 export const getPosts = async (req, res) => {
   try {
-    // Get page and limit from query params (with defaults)
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    
-    // Calculate skip value
     const skip = (page - 1) * limit;
 
-    // Get posts for logged-in user only
     const posts = await Post.find({ author: req.user._id })
-      .sort({ createdAt: -1 }) // Newest first
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('author', 'name email'); // Include author info
+      .populate('author', 'name email');
 
-    // Get total count for pagination
     const total = await Post.countDocuments({ author: req.user._id });
-
-    // Calculate total pages
     const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
@@ -77,7 +84,6 @@ export const getPosts = async (req, res) => {
         hasPrevPage: page > 1
       }
     });
-
   } catch (error) {
     console.error('Get posts error:', error);
     res.status(500).json({
@@ -95,23 +101,14 @@ export const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
 
-    // Check if post exists
     if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: 'Post not found'
-      });
+      return res.status(404).json({ success: false, message: 'Post not found' });
     }
 
-    // Check ownership - CRITICAL SECURITY CHECK
     if (post.author.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to delete this post'
-      });
+      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    // Delete the post
     await post.deleteOne();
 
     res.status(200).json({
@@ -119,14 +116,9 @@ export const deletePost = async (req, res) => {
       message: 'Post deleted successfully',
       data: { id: req.params.id }
     });
-
   } catch (error) {
     console.error('Delete post error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting post',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Error deleting post' });
   }
 };
 
@@ -137,31 +129,20 @@ export const updatePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
 
-    // Check if post exists
     if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: 'Post not found'
-      });
+      return res.status(404).json({ success: false, message: 'Post not found' });
     }
 
-    // Check ownership - CRITICAL SECURITY CHECK
     if (post.author.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to update this post'
-      });
+      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    // Update fields
     const { title, content, category, status } = req.body;
-    
     if (title) post.title = title;
     if (content) post.content = content;
     if (category) post.category = category;
     if (status) post.status = status;
 
-    // Save updated post
     const updatedPost = await post.save();
 
     res.status(200).json({
@@ -169,14 +150,9 @@ export const updatePost = async (req, res) => {
       message: 'Post updated successfully',
       data: updatedPost
     });
-
   } catch (error) {
     console.error('Update post error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating post',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Error updating post' });
   }
 };
 
@@ -185,35 +161,19 @@ export const updatePost = async (req, res) => {
 // @access  Private
 export const getPostById = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id)
-      .populate('author', 'name email');
+    const post = await Post.findById(req.params.id).populate('author', 'name email');
 
     if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: 'Post not found'
-      });
+      return res.status(404).json({ success: false, message: 'Post not found' });
     }
 
-    // Check ownership
     if (post.author._id.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to view this post'
-      });
+      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    res.status(200).json({
-      success: true,
-      data: post
-    });
-
+    res.status(200).json({ success: true, data: post });
   } catch (error) {
     console.error('Get post error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching post',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Error fetching post' });
   }
 };

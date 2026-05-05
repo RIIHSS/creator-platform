@@ -1,15 +1,32 @@
 import express from 'express';
 import { protect } from '../middleware/auth.js';
-import { createPost, getPosts, deletePost, getPostById, updatePost } from '../controllers/postController.js';
+import { 
+  createPost, 
+  getPosts, 
+  deletePost, 
+  getPostById, 
+  updatePost 
+} from '../controllers/postController.js';
 
-const router = express.Router();
+// Export a function that accepts the 'io' instance
+const postRoutes = (io) => {
+  const router = express.Router();
 
-// Both routes require authentication
-router.post('/', protect, createPost);
-router.get('/', protect, getPosts);
-router.delete('/:id', protect, deletePost);
-router.put('/:id', protect, updatePost);
-router.get('/:id', protect, getPostById);
+  // MIDDLEWARE: Attach 'io' to the 'req' object 
+  // Now every controller function can use req.io.emit()
+  router.use((req, res, next) => {
+    req.io = io;
+    next();
+  });
 
-export default router;
+  // Routes (All require authentication)
+  router.post('/', protect, createPost);
+  router.get('/', protect, getPosts);
+  router.get('/:id', protect, getPostById);
+  router.put('/:id', protect, updatePost);
+  router.delete('/:id', protect, deletePost);
 
+  return router;
+};
+
+export default postRoutes;
