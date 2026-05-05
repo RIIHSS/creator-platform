@@ -1,13 +1,19 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
+import { v2 as cloudinary } from 'cloudinary'; // ✅ Added for Cloudinary
+
+// Config & Database
 import connectDB from './config/database.js';
+
+// Routes
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import jwt from 'jsonwebtoken'; // ✅ Added JWT import
+import uploadRoutes from './routes/upload.js'; // ✅ Added the new upload route
 
 // Load environment variables 
 dotenv.config();
@@ -19,14 +25,18 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    credentials: true,
-    optionsSuccessStatus: 200
-}));
-app.use(express.json());
+// ==========================================
+// ☁️ CLOUDINARY CONFIGURATION
+// ==========================================
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
+// ==========================================
+// 🔌 SOCKET.IO SETUP
+// ==========================================
 const io = new Server(httpServer, {
     cors: {
         origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -35,45 +45,46 @@ const io = new Server(httpServer, {
     }
 });
 
-// ✅ Added Socket.IO Authentication Middleware
+// Socket Auth Middleware
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
-
-    if (!token) {
-        return next(new Error('Authentication error: No token provided'));
-    }
+    if (!token) return next(new Error('Authentication error: No token provided'));
 
     try {
-        // Verify the token using your secret key
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // Attach the decoded user payload to the socket object
         socket.user = decoded; 
-
-        // Token is valid, allow the connection
         next();
     } catch (err) {
-        console.error('Socket JWT Error:', err.message);
         next(new Error('Authentication error: Invalid or expired token'));
     }
 });
 
-// Socket connection handling
 io.on('connection', (socket) => {
-    // ✅ You can now access socket.user here because it passed the middleware!
-    console.log(`✅ User connected: ${socket.id} | (User ID: ${socket.user.userId})`);
-
-    socket.on('disconnect', (reason) =>{
+    console.log(`✅ User connected: ${socket.id} | User: ${socket.user?.id || socket.user?._id}`);
+    socket.on('disconnect', (reason) => {
         console.log(`❌ User disconnected: ${socket.id} (${reason})`);
     });
 });
 
-// Routes
+// ==========================================
+// 🛠️ MIDDLEWARE
+// ==========================================
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+    optionsSuccessStatus: 200
+}));
+app.use(express.json());
+
+// ==========================================
+// 🚀 API ROUTES
+// ==========================================
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes(io));
+app.use('/api/upload', uploadRoutes); // ✅ Registering the new Upload Route
+app.use('/api/posts', postRoutes(io)); // Passing io to post routes
 
-// Health check endpoint (keep for testing)
+// Health check
 app.get('/api/health', (req, res) => {
     res.json({
         message: 'Server is running.',
@@ -82,8 +93,11 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Start server 
+// ==========================================
+// 🏁 START SERVER
+// ==========================================
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`🔌 Socket.io ready for connections`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🔌 Socket.io ready for connections`);
+    console.log(`☁️ Cloudinary configured and ready`);
 });
