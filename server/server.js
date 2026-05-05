@@ -4,7 +4,8 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import { v2 as cloudinary } from 'cloudinary'; // ✅ Added for Cloudinary
+import { v2 as cloudinary } from 'cloudinary';
+import timingMiddleware from './middleware/timing.js'; // ✅ Added import
 
 // Config & Database
 import connectDB from './config/database.js';
@@ -13,7 +14,7 @@ import connectDB from './config/database.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
-import uploadRoutes from './routes/upload.js'; // ✅ Added the new upload route
+import uploadRoutes from './routes/upload.js';
 
 // Load environment variables 
 dotenv.config();
@@ -45,7 +46,6 @@ const io = new Server(httpServer, {
     }
 });
 
-// Socket Auth Middleware
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Authentication error: No token provided'));
@@ -76,13 +76,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// ✅ Added timingMiddleware BEFORE the routes
+app.use(timingMiddleware);
+
 // ==========================================
 // 🚀 API ROUTES
 // ==========================================
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/upload', uploadRoutes); // ✅ Registering the new Upload Route
-app.use('/api/posts', postRoutes(io)); // Passing io to post routes
+app.use('/api/upload', uploadRoutes);
+app.use('/api/posts', postRoutes(io));
 
 // Health check
 app.get('/api/health', (req, res) => {
