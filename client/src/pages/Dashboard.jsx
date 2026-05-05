@@ -2,17 +2,57 @@ import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import socket from '../services/socket'; // Added from Snippet 1
 
 const Dashboard = () => {
+  // Combined context extraction
   const { user, logout, loading } = useAuth();
 
+  // Snippet 2 States
   const [posts, setPosts] = useState([]);
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // ==========================================
+  // EFFECT 1: Socket.IO Connection (Snippet 1)
+  // ==========================================
   useEffect(() => {
+    // Connect when component mounts
+    socket.connect();
+
+    // Listen for successful connection
+    socket.on('connect', () => {
+      console.log('🔌 Socket connected:', socket.id);
+    });
+
+    // Listen for disconnection
+    socket.on('disconnect', (reason) => {
+      console.log('❌ Socket disconnected:', reason);
+    });
+
+    // Listen for connection errors
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error.message);
+    });
+
+    // Cleanup when component unmounts
+    return () => {
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('connect_error');
+      socket.disconnect();
+    };
+  }, []);
+
+  // ==========================================
+  // EFFECT 2: Load Posts (Snippet 2)
+  // ==========================================
+  useEffect(() => {
+    // Only load if the user is authenticated
+    if (!user) return; 
+
     const loadPosts = async () => {
       setIsLoading(true);
       setError('');
@@ -33,8 +73,11 @@ const Dashboard = () => {
     };
 
     loadPosts();
-  }, [currentPage]);
+  }, [currentPage, user]);
 
+  // ==========================================
+  // HANDLERS
+  // ==========================================
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
@@ -49,19 +92,22 @@ const Dashboard = () => {
     }
   };
 
-  // Auth loading
+  // ==========================================
+  // AUTH CHECKS & EARLY RETURNS
+  // ==========================================
   if (loading) {
     return <div style={loadingStyle}>Loading...</div>;
   }
 
-  // Not logged in
   if (!user) {
     return <Navigate to="/login" />;
   }
 
+  // ==========================================
+  // RENDER UI
+  // ==========================================
   return (
     <div style={containerStyle}>
-
       {/* HEADER */}
       <div style={headerStyle}>
         <div>
@@ -71,9 +117,7 @@ const Dashboard = () => {
 
         <div style={{ display: 'flex', gap: '1rem' }}>
           <Link to="/create">
-            <button style={createButtonStyle}>
-              + Create New Post
-            </button>
+            <button style={createButtonStyle}>+ Create New Post</button>
           </Link>
 
           <button onClick={logout} style={logoutButtonStyle}>
@@ -90,7 +134,6 @@ const Dashboard = () => {
         <div style={loadingStyle}>Loading posts...</div>
       ) : (
         <div style={postsContainerStyle}>
-
           {/* EMPTY STATE */}
           {posts.length === 0 ? (
             <div style={emptyStateStyle}>
@@ -116,22 +159,18 @@ const Dashboard = () => {
                     </span>
                   </div>
 
-                  {/* ✅ YOUR SNIPPET ADDED HERE (UNCHANGED) */}
                   <div style={actionsStyle}>
                     <Link to={`/edit/${post._id}`}>
-                      <button style={editButtonStyle}>
-                        Edit
-                      </button>
+                      <button style={editButtonStyle}>Edit</button>
                     </Link>
-                    
-                    <button 
+
+                    <button
                       onClick={() => handleDelete(post._id)}
                       style={deleteButtonStyle}
                     >
                       Delete
                     </button>
                   </div>
-
                 </div>
               ))}
 
@@ -226,7 +265,6 @@ const metaStyle = {
   color: '#777',
 };
 
-/* (your snippet styles assumed already exist) */
 const actionsStyle = {
   display: 'flex',
   gap: '0.5rem',
