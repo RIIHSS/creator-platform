@@ -48,10 +48,9 @@ const ImageUpload = ({ onUpload }) => {
     setPreviewUrl(objectUrl);
   };
 
-  // Step 8: Submit Handler
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  // ✅ Step 8: Triggered by Button Click instead of Form Submit
+  // Removed e.preventDefault() as it's no longer a form submission
+  const handleUploadClick = () => {
     if (!selectedFile) {
       setError('Please select an image first');
       return;
@@ -78,37 +77,39 @@ const ImageUpload = ({ onUpload }) => {
   // --- JSX ---
   return (
     <div style={containerStyle}>
-      <form onSubmit={handleSubmit}>
-        <label style={labelStyle}>Post Image</label>
-        
-        {/* Step 3: File Input */}
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={handleFileChange}
-          style={inputStyle}
-        />
+      {/* ❌ REMOVED <form> tag to prevent nesting error */}
+      <label style={labelStyle}>Post Image</label>
+      
+      {/* Step 3: File Input */}
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={handleFileChange}
+        style={inputStyle}
+      />
 
-        {/* Step 5: Conditional Error Rendering */}
-        {error && <p style={errorStyle}>⚠️ {error}</p>}
+      {/* Step 5: Conditional Error Rendering */}
+      {error && <p style={errorStyle}>⚠️ {error}</p>}
 
-        {/* Step 4: Image Preview */}
-        {previewUrl && (
-          <div style={previewContainerStyle}>
-            <img src={previewUrl} alt="Preview" style={imagePreviewStyle} />
-            <p style={fileNameStyle}>{selectedFile?.name}</p>
-          </div>
-        )}
+      {/* Step 4: Image Preview */}
+      {previewUrl && (
+        <div style={previewContainerStyle}>
+          <img src={previewUrl} alt="Preview" style={imagePreviewStyle} />
+          <p style={fileNameStyle}>{selectedFile?.name}</p>
+        </div>
+      )}
 
-        {/* Step 9: Submit Button */}
-        <button
-          type="submit"
-          disabled={!selectedFile || !!error}
-          style={!selectedFile || !!error ? disabledButtonStyle : uploadButtonStyle}
-        >
-          Upload Image
-        </button>
-      </form>
+      {/* ✅ Step 9: Submit Button 
+          Changed type to "button" and onSubmit to onClick 
+      */}
+      <button
+        type="button"
+        onClick={handleUploadClick}
+        disabled={!selectedFile || !!error}
+        style={!selectedFile || !!error ? disabledButtonStyle : uploadButtonStyle}
+      >
+        Upload Image
+      </button>
     </div>
   );
 };

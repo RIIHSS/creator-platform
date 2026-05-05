@@ -3,7 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import socket from '../services/socket';
-import toast from 'react-hot-toast'; // ✅ Added toast import
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const { user, logout, loading } = useAuth();
@@ -32,17 +32,15 @@ const Dashboard = () => {
       console.error('Socket auth error:', error.message);
     });
 
-    // ✅ NEW: Listen for new posts and show toast notification
     socket.on('newPost', (data) => {
       toast.success(data.message);
     });
 
-    // Cleanup when component unmounts
     return () => {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('connect_error');
-      socket.off('newPost'); // ✅ Added cleanup for the new listener
+      socket.off('newPost');
       socket.disconnect();
     };
   }, []);
@@ -92,7 +90,6 @@ const Dashboard = () => {
     }
   };
 
-  // Auth Checks
   if (loading) return <div style={loadingStyle}>Loading...</div>;
   if (!user) return <Navigate to="/login" />;
 
@@ -129,20 +126,36 @@ const Dashboard = () => {
             <>
               {posts.map((post) => (
                 <div key={post._id} style={postCardStyle}>
-                  <h3>{post.title}</h3>
-                  <p style={contentPreviewStyle}>{post.content.substring(0, 150)}...</p>
-                  <div style={metaStyle}>
-                    <span>{post.category}</span>
-                    <span>{post.status}</span>
-                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <div style={actionsStyle}>
-                    <Link to={`/edit/${post._id}`}>
-                      <button style={editButtonStyle}>Edit</button>
-                    </Link>
-                    <button onClick={() => handleDelete(post._id)} style={deleteButtonStyle}>
-                      Delete
-                    </button>
+                  
+                  {/* ========================================== */}
+                  {/* ✅ STEP 8: Render Cover Image Conditionally */}
+                  {/* ========================================== */}
+                  {post.coverImage && (
+                    <img
+                      src={post.coverImage}
+                      alt={`Cover image for ${post.title}`}
+                      style={postImageStyle}
+                    />
+                  )}
+
+                  <div style={cardBodyStyle}>
+                    <h3>{post.title}</h3>
+                    <p style={contentPreviewStyle}>{post.content.substring(0, 150)}...</p>
+                    
+                    <div style={metaStyle}>
+                      <span>{post.category}</span>
+                      <span>{post.status}</span>
+                      <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    <div style={actionsStyle}>
+                      <Link to={`/edit/${post._id}`}>
+                        <button style={editButtonStyle}>Edit</button>
+                      </Link>
+                      <button onClick={() => handleDelete(post._id)} style={deleteButtonStyle}>
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -182,16 +195,36 @@ const containerStyle = { minHeight: '80vh', padding: '2rem', maxWidth: '1200px',
 const headerStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' };
 const createButtonStyle = { padding: '0.5rem 1.5rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' };
 const logoutButtonStyle = { padding: '0.5rem 1.5rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' };
-const postsContainerStyle = { display: 'grid', gap: '1.5rem' };
-const postCardStyle = { backgroundColor: '#f8f9fa', padding: '1.5rem', borderRadius: '8px' };
+
+// Updated to grid layout to look better with images
+const postsContainerStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' };
+
+const postCardStyle = { 
+  backgroundColor: '#f8f9fa', 
+  borderRadius: '8px', 
+  overflow: 'hidden', // Ensures image corners follow card radius
+  display: 'flex',
+  flexDirection: 'column',
+  boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+};
+
+const cardBodyStyle = { padding: '1.5rem' };
+
+// ✅ Added Image Styles from Step 8
+const postImageStyle = { 
+  width: '100%', 
+  maxHeight: '200px', 
+  objectFit: 'cover' 
+};
+
 const contentPreviewStyle = { color: '#555', marginTop: '0.5rem' };
-const metaStyle = { display: 'flex', gap: '1rem', marginTop: '1rem', fontSize: '0.9rem', color: '#777' };
+const metaStyle = { display: 'flex', gap: '1rem', marginTop: '1rem', fontSize: '0.8rem', color: '#777' };
 const actionsStyle = { display: 'flex', gap: '0.5rem', marginTop: '1rem' };
 const editButtonStyle = { padding: '0.5rem 1rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' };
 const deleteButtonStyle = { padding: '0.5rem 1rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' };
-const paginationStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem' };
+const paginationStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', gridColumn: '1 / -1' };
 const paginationButtonStyle = { padding: '0.5rem 1rem', border: '1px solid #ccc', backgroundColor: 'white', cursor: 'pointer' };
 const pageInfoStyle = { fontSize: '0.9rem' };
-const emptyStateStyle = { textAlign: 'center', padding: '3rem', color: '#666' };
+const emptyStateStyle = { textAlign: 'center', padding: '3rem', color: '#666', gridColumn: '1 / -1' };
 const errorStyle = { backgroundColor: '#f8d7da', color: '#721c24', padding: '1rem', marginBottom: '1rem', borderRadius: '5px' };
 const loadingStyle = { textAlign: 'center', padding: '2rem' };

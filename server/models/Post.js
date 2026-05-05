@@ -18,7 +18,14 @@ const postSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
-    // Add fields specific to your theme
+    // ==========================================
+    // ✅ ADDED: coverImage field from Step 1
+    // ==========================================
+    coverImage: {
+      type: String,
+      default: null
+    },
+    // Category specific to your theme
     category: {
       type: String,
       enum: ['Technology', 'Lifestyle', 'Travel', 'Food'],
@@ -31,7 +38,7 @@ const postSchema = new mongoose.Schema(
     }
   },
   { 
-    timestamps: true // Adds createdAt and updatedAt
+    timestamps: true // Automatically adds createdAt and updatedAt
   }
 );
 

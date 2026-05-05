@@ -5,7 +5,8 @@ import Post from '../models/Post.js';
 // @access  Private
 export const createPost = async (req, res) => {
   try {
-    const { title, content, category, status } = req.body;
+    // ✅ ADDED: coverImage to the destructuring
+    const { title, content, category, status, coverImage } = req.body;
 
     // Validate required fields
     if (!title || !content) {
@@ -21,19 +22,18 @@ export const createPost = async (req, res) => {
       content,
       category,
       status,
-      author: req.user._id // From protect middleware
+      coverImage, // ✅ ADDED: save the image URL to the database
+      author: req.user._id 
     });
 
-    // ==========================================
-    // 🔌 SOCKET.IO EMIT (Merged from Snippet)
-    // ==========================================
+    // Socket.IO EMIT
     if (req.io) {
       req.io.emit('newPost', {
         message: `New post created by ${req.user.name}`,
         post: {
           _id: post._id,
           title: post.title,
-          createdBy: req.user.name // Assumes protect middleware attaches user name
+          createdBy: req.user.name
         }
       });
     }
@@ -137,11 +137,14 @@ export const updatePost = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    const { title, content, category, status } = req.body;
+    // ✅ ADDED: coverImage to the destructuring
+    const { title, content, category, status, coverImage } = req.body;
+    
     if (title) post.title = title;
     if (content) post.content = content;
     if (category) post.category = category;
     if (status) post.status = status;
+    if (coverImage) post.coverImage = coverImage; // ✅ ADDED: allow updating the image
 
     const updatedPost = await post.save();
 
