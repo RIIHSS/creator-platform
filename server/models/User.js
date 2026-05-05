@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
+      unique: true, // Ensures no duplicate registrations
+      index: true,  // ✅ ADDED: Single-field index for fast authentication lookups
       lowercase: true,
       trim: true,
       match: [
@@ -24,13 +25,21 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
-      select: false // Don't return password in queries by default
+      select: false // ✅ Security: Don't return password in queries by default
+    },
+    // Adding avatar field usually included in these projects
+    avatar: {
+      type: String,
+      default: null
     }
   },
   { 
     timestamps: true // Automatically creates createdAt and updatedAt fields
   }
 );
+
+// Alternative syntax (keeping for reference):
+// userSchema.index({ email: 1 });
 
 const User = mongoose.model('User', userSchema);
 
