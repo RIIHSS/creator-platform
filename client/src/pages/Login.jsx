@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api'; // ✅ added API utility
+import api from '../services/api'; 
 
 const Login = () => {
   const { login } = useAuth();
@@ -24,6 +24,7 @@ const Login = () => {
       [name]: value
     }));
 
+    // Clear specific field error when user types
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -60,7 +61,6 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // ✅ MERGED PART: using api utility instead of fetch
       const response = await api.post('/api/auth/login', {
         email: formData.email.trim().toLowerCase(),
         password: formData.password
@@ -68,15 +68,13 @@ const Login = () => {
 
       const data = response.data;
 
-      // success
+      // Update Auth Context
       login(data.user, data.token);
 
       setFormData({ email: '', password: '' });
       navigate('/dashboard');
     } catch (error) {
       console.error(error);
-
-      // safer error handling for axios-style responses
       setApiError(
         error?.response?.data?.message ||
         'Unable to connect to server'
@@ -92,14 +90,18 @@ const Login = () => {
         <h1 style={titleStyle}>Welcome Back</h1>
         <p style={subtitleStyle}>Login to your account</p>
 
+        {/* role="alert" makes this discoverable by tests and screen readers */}
         {apiError && (
-          <div style={errorMessageStyle}>{apiError}</div>
+          <div role="alert" style={errorMessageStyle}>{apiError}</div>
         )}
 
         <form onSubmit={handleSubmit} style={formStyle}>
+          
           <div style={fieldStyle}>
-            <label style={labelStyle}>Email</label>
+            {/* htmlFor must match the input id */}
+            <label style={labelStyle} htmlFor="email">Email</label>
             <input
+              id="email" 
               type="email"
               name="email"
               value={formData.email}
@@ -109,13 +111,14 @@ const Login = () => {
               disabled={isLoading}
             />
             {errors.email && (
-              <span style={errorTextStyle}>{errors.email}</span>
+              <span role="alert" style={errorTextStyle}>{errors.email}</span>
             )}
           </div>
 
           <div style={fieldStyle}>
-            <label style={labelStyle}>Password</label>
+            <label style={labelStyle} htmlFor="password">Password</label>
             <input
+              id="password"
               type="password"
               name="password"
               value={formData.password}
@@ -125,7 +128,7 @@ const Login = () => {
               disabled={isLoading}
             />
             {errors.password && (
-              <span style={errorTextStyle}>{errors.password}</span>
+              <span role="alert" style={errorTextStyle}>{errors.password}</span>
             )}
           </div>
 
@@ -149,7 +152,8 @@ const Login = () => {
   );
 };
 
-// Styles (unchanged)
+/* ================= STYLES ================= */
+
 const containerStyle = {
   minHeight: '80vh',
   display: 'flex',
@@ -172,7 +176,7 @@ const titleStyle = { textAlign: 'center', marginBottom: '0.5rem' };
 const subtitleStyle = { textAlign: 'center', marginBottom: '2rem', color: '#666' };
 const formStyle = { display: 'flex', flexDirection: 'column', gap: '1.2rem' };
 const fieldStyle = { display: 'flex', flexDirection: 'column' };
-const labelStyle = { marginBottom: '0.3rem' };
+const labelStyle = { marginBottom: '0.3rem', fontWeight: 'bold' };
 
 const inputStyle = {
   padding: '0.7rem',
@@ -188,6 +192,7 @@ const inputErrorStyle = {
 const errorTextStyle = {
   color: 'red',
   fontSize: '0.8rem',
+  marginTop: '0.2rem'
 };
 
 const buttonStyle = {
@@ -197,17 +202,23 @@ const buttonStyle = {
   border: 'none',
   borderRadius: '5px',
   cursor: 'pointer',
+  fontWeight: 'bold'
 };
 
 const buttonDisabledStyle = {
   ...buttonStyle,
   backgroundColor: '#999',
+  cursor: 'not-allowed'
 };
 
 const errorMessageStyle = {
   backgroundColor: '#f8d7da',
+  color: '#721c24',
   padding: '0.8rem',
   marginBottom: '1rem',
+  borderRadius: '5px',
+  textAlign: 'center',
+  border: '1px solid #f5c6cb'
 };
 
 const linkTextStyle = {
@@ -217,6 +228,7 @@ const linkTextStyle = {
 
 const linkStyle = {
   color: '#007bff',
+  textDecoration: 'none'
 };
 
 export default Login;
