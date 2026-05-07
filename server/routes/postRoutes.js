@@ -6,33 +6,29 @@ import {
   deletePost, 
   getPostById, 
   updatePost,
-  getPostsByUser // ✅ Added this new controller function
+  getPostsByUser 
 } from '../controllers/postController.js';
 
+// 1. Wrap the routes in a function that accepts 'io'
 const postRoutes = (io) => {
   const router = express.Router();
 
-  // Attach 'io' to the 'req' object 
+  // Middleware to attach socket.io to the request object
   router.use((req, res, next) => {
     req.io = io;
     next();
   });
 
-  // GET all posts (Now with populate in the controller)
-  router.get('/', protect, getPosts);
-
-  // GET posts for a specific user (New from Snippet 1)
-  router.get('/user/:userId', protect, getPostsByUser);
-
-  // GET single post
-  router.get('/:id', protect, getPostById);
-
-  // Create, Update, Delete
+  // All Post Routes
   router.post('/', protect, createPost);
+  router.get('/', protect, getPosts);
+  router.get('/user/:userId', protect, getPostsByUser);
+  router.get('/:id', protect, getPostById);
   router.put('/:id', protect, updatePost);
   router.delete('/:id', protect, deletePost);
 
   return router;
 };
 
+// ✅ THE FIX: You must have this exact line at the bottom!
 export default postRoutes;
