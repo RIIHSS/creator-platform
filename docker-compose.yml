@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # 1. DATABASE
+  mongo:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+
+  # 2. BACKEND (Server)
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: creator-platform-server
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      MONGODB_URI: mongodb://admin:password123@mongo:27017/creator-platform?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      # Matches the host port you assigned to the client below
+      CLIENT_URL: http://localhost:3000
+    depends_on:
+      - mongo
+
+  # 3. FRONTEND (Client)
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: creator-platform-client
+    restart: always
+    ports:
+      - "3000:80"
+    environment:
+      # Tells the React app where to find the API
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - server
+
+volumes:
+  mongo-data:
