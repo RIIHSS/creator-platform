@@ -1,20 +1,10 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
-import timingMiddleware from './middleware/timing.js'; // ✅ Added import
-
-// Config & Database
 import connectDB from './config/database.js';
-
-// Routes
-import userRoutes from './routes/userRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-import postRoutes from './routes/postRoutes.js';
-import uploadRoutes from './routes/upload.js';
+import app from './app.js'; // ✅ Import the app logic
 
 // Load environment variables 
 dotenv.config();
@@ -22,12 +12,9 @@ dotenv.config();
 // Connect to database
 connectDB();
 
-const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-
-app.use(express.json());
 // ==========================================
 // ☁️ CLOUDINARY CONFIGURATION
 // ==========================================
@@ -48,6 +35,9 @@ const io = new Server(httpServer, {
     }
 });
 
+// Make io accessible globally so app.js can find it
+global.io = io;
+
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Authentication error: No token provided'));
@@ -62,39 +52,9 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-    console.log(`✅ User connected: ${socket.id} | User: ${socket.user?.id || socket.user?._id}`);
+    console.log(`✅ User connected: ${socket.id} | User: ${socket.user?.id}`);
     socket.on('disconnect', (reason) => {
         console.log(`❌ User disconnected: ${socket.id} (${reason})`);
-    });
-});
-
-// ==========================================
-// 🛠️ MIDDLEWARE
-// ==========================================
-app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    credentials: true,
-    optionsSuccessStatus: 200
-}));
-app.use(express.json());
-
-// ✅ Added timingMiddleware BEFORE the routes
-app.use(timingMiddleware);
-
-// ==========================================
-// 🚀 API ROUTES
-// ==========================================
-app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/posts', postRoutes(io));
-
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({
-        message: 'Server is running.',
-        timestamp: new Date(),
-        database: 'Connected'
     });
 });
 
