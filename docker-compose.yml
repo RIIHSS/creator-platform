@@ -23,14 +23,9 @@ services:
     restart: always
     ports:
       - "5000:5000"
-    environment:
-      MONGODB_URI: mongodb://admin:password123@mongo:27017/creator-platform?authSource=admin
-      JWT_SECRET: ${JWT_SECRET}
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      # Matches the host port you assigned to the client below
-      CLIENT_URL: http://localhost:3000
+    # ✅ Replaced 'environment' block with 'env_file'
+    env_file:
+      - ./server/.env
     depends_on:
       - mongo
 
