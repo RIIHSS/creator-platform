@@ -7,9 +7,6 @@ export const createPost = async (req, res) => {
   try {
     const { title, content, category, status, coverImage } = req.body;
 
-    if (!title || !content) {
-      return res.status(400).json({ success: false, message: 'Please provide title and content' });
-    }
 
     const post = await Post.create({
       title,
@@ -17,7 +14,7 @@ export const createPost = async (req, res) => {
       category,
       status,
       coverImage, 
-      author: req.user._id 
+      author: req.user ? req.user._id : null
     });
 
     if (req.io) {

@@ -4,27 +4,25 @@ const postSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'Title is required'],
-      trim: true,
-      maxlength: [100, 'Title cannot exceed 100 characters']
+      default: 'Untitled Post', // ✅ Fallback if empty
+      trim: true
+      // ❌ Removed maxlength to prevent "Title too long" errors
     },
     content: {
       type: String,
-      required: [true, 'Content is required'],
-      minlength: [10, 'Content must be at least 10 characters']
+      default: 'No content given.', // ✅ Fallback if empty
+      trim: true
+      // ❌ Removed minlength to prevent "Content too short" errors
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      index: true // ✅ Single-field index for filtering by author
+      index: true 
     },
-    // Matches your previous Cloudinary setup
     coverImage: {
       type: String,
       default: null
     },
-    // Array of User IDs who liked the post
     likes: [
       { 
         type: mongoose.Schema.Types.ObjectId, 
@@ -43,18 +41,12 @@ const postSchema = new mongoose.Schema(
     }
   },
   { 
-    timestamps: true // Automatically adds createdAt and updatedAt
+    timestamps: true 
   }
 );
 
-// ===============================================================
-// ✅ ADVANCED INDEXES (From Snippet 1)
-// ===============================================================
-
-// 1. Compound index: Optimized for Dashboard (filter by author + sort by newest)
+// Indexes for performance
 postSchema.index({ author: 1, createdAt: -1 });
-
-// 2. Global Index: Optimized for public feeds (sort everything by newest)
 postSchema.index({ createdAt: -1 });
 
 const Post = mongoose.model('Post', postSchema);

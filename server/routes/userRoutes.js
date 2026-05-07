@@ -1,7 +1,6 @@
 import express from 'express';
 import { protect } from '../middleware/auth.js';
 import {
-  registerUser,
   getAllUsers,
   getUserById,
   updateUser,
@@ -10,10 +9,9 @@ import {
 
 const router = express.Router();
 
-// Public route (no auth required)
-router.post('/register', registerUser);
+// All routes here will be prefixed with /api/users in server.js
 
-// Protected routes (auth required)
+// Protected routes (Only logged-in users can see/edit profiles)
 router.get('/', protect, getAllUsers);
 router.get('/:id', protect, getUserById);
 router.put('/:id', protect, updateUser);
