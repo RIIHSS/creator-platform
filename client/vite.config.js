@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -13,5 +12,11 @@ export default defineConfig({
         secure: false,
       }
     }
+  },
+  // ✅ Vitest configuration added below
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.js', // Make sure this file exists in src/
   }
 })
