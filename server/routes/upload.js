@@ -17,14 +17,17 @@ const uploadToCloudinary = (buffer) => {
         else resolve(result);
       }
     );
+    // Sends the binary data to Cloudinary
     stream.end(buffer);
   });
 };
 
 // ==========================================
 // 🚀 UPLOAD ROUTE
+// POST /api/upload
 // ==========================================
 router.post('/', protect, upload.single('image'), async (req, res) => {
+  // 1. Check if a file was actually sent
   if (!req.file) {
     return res.status(400).json({ 
       success: false, 
@@ -33,8 +36,10 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
   }
 
   try {
+    // 2. Upload the buffer to Cloudinary
     const result = await uploadToCloudinary(req.file.buffer);
 
+    // 3. Return the secure_url and publicId
     res.status(200).json({
       success: true,
       url: result.secure_url,
@@ -45,16 +50,14 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
     console.error('Cloudinary Upload Error:', error);
     res.status(500).json({ 
       success: false, 
-      message: error.message 
+      message: error.message || 'Failed to upload to Cloudinary' 
     });
   }
 });
 
 // ==========================================
-// ⚠️ MULTER ERROR HANDLER (Added here)
+// ⚠️ MULTER ERROR HANDLER
 // ==========================================
-// This must have 4 parameters (error, req, res, next) 
-// to be recognized as error middleware.
 router.use((error, req, res, next) => {
   if (error.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
@@ -63,12 +66,11 @@ router.use((error, req, res, next) => {
     });
   }
 
-  // Handle errors from our fileFilter (wrong file type) 
-  // or any other upload errors.
   return res.status(400).json({
     success: false,
     message: error.message || 'File upload error'
   });
 });
 
+// ✅ EXPORT THE ROUTER
 export default router;
